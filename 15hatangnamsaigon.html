@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nam Sài Gòn – 15 tuyến hạ tầng định giá</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: navy game-show board, 5x3 numbered tickets; topic hidden until opened; one gold accent, status colour only on the answer badge. */
+:root {
+  --stage: #0C1730; --panel: #13233F; --panel-2: #1C3157; --gold: #D9A93B; --gold-ink: #8A5F0E;
+  --paper: #F7F5EF; --ink: #13233F; --body-dark: #3E4959; --muted: #C9D3E3; --line: rgba(201,211,227,.22);
+  --rach: #B04A24; --ok: #2F7D4F; --build: #8A5F0E; --prep: #2D5C9A; --plan: #6B7280;
+  --display: 'Big Shoulders Display','Arial Narrow','Roboto Condensed',sans-serif;
+  --text: 'Be Vietnam Pro','Segoe UI',Roboto,Arial,sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: var(--stage); color: var(--paper); font-family: var(--text); overflow-x: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 4px solid var(--gold); outline-offset: 4px; }
+.wrap { min-height: 100%; display: flex; flex-direction: column; gap: clamp(14px,2.2vh,28px); padding: clamp(16px,3.4vh,48px) clamp(16px,4vw,80px); }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.eyebrow { font-size: clamp(13px,1.1vw,20px); font-weight: 700; letter-spacing: .22em; color: var(--gold); }
+h1 { margin-top: 8px; font-family: var(--display); font-weight: 800; font-size: clamp(38px,4.8vw,92px); line-height: .95; letter-spacing: .01em; text-wrap: balance; }
+.how { margin-top: 10px; font-size: clamp(15px,1.25vw,22px); color: var(--muted); }
+.tools { display: flex; align-items: center; gap: 14px; }
+.count { font-size: clamp(15px,1.2vw,22px); color: var(--muted); }
+.count b { font-family: var(--display); font-size: 1.7em; color: var(--paper); font-variant-numeric: tabular-nums; }
+.reset { border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 10px 20px; font-size: clamp(14px,1vw,18px); font-weight: 600; color: var(--muted); }
+.reset:hover { border-color: var(--gold); color: var(--paper); }
+.reset.armed { border-color: var(--gold); color: var(--gold); }
+
+.board { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); grid-auto-rows: minmax(0,1fr); gap: clamp(10px,1.3vw,24px); }
+.tile { position: relative; min-height: clamp(96px,17vh,260px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; border: 2px solid var(--line); border-radius: 18px; background: linear-gradient(160deg,var(--panel-2),var(--panel)); transition: transform 160ms ease, border-color 160ms ease; }
+.tile:hover { transform: translateY(-4px); border-color: var(--gold); }
+.tile .num { font-family: var(--display); font-weight: 800; font-size: clamp(64px,9.5vw,190px); line-height: .85; color: var(--gold); }
+.tile .name { display: none; font-size: clamp(13px,1.05vw,20px); font-weight: 600; line-height: 1.25; margin-top: 6px; }
+.tile.done { background: var(--paper); border-color: var(--paper); color: var(--ink); justify-content: space-between; padding: clamp(10px,1vw,18px); }
+.tile.done .num { font-size: clamp(40px,5vw,96px); color: transparent; -webkit-text-stroke: 2px var(--gold-ink); }
+.tile.done .name { display: block; margin-top: 0; }
+footer { font-size: clamp(12px,.9vw,16px); color: var(--muted); }
+
+.overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: clamp(12px,3vw,48px); background: rgba(6,12,26,.78); }
+.overlay.open { display: flex; }
+.card { width: min(1440px,100%); max-height: 100%; overflow: auto; background: var(--paper); color: var(--ink); border-radius: 26px; padding: clamp(20px,2.8vw,52px); display: flex; flex-direction: column; gap: clamp(14px,2.2vh,28px); box-shadow: 0 30px 80px rgba(0,0,0,.45); animation: pop 260ms cubic-bezier(.2,.8,.2,1); }
+@keyframes pop { from { opacity: 0; transform: translateY(18px) scale(.97); } }
+.qhead { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.chip { display: flex; align-items: center; gap: 16px; }
+.chip .n { font-family: var(--display); font-weight: 800; font-size: clamp(56px,6vw,110px); line-height: .8; color: var(--gold-ink); }
+.chip .t { font-size: clamp(13px,1vw,18px); font-weight: 700; letter-spacing: .14em; color: var(--gold-ink); }
+.timer { min-width: 150px; text-align: right; }
+.timer .s { font-family: var(--display); font-weight: 800; font-size: clamp(36px,3.4vw,64px); line-height: .9; font-variant-numeric: tabular-nums; }
+.timer .s.out { color: var(--rach); }
+.timer .bar { margin-top: 8px; height: 8px; border-radius: 4px; background: rgba(19,35,63,.12); overflow: hidden; }
+.timer .bar i { display: block; height: 100%; width: 100%; background: var(--gold); transform-origin: left center; }
+.topic { font-family: var(--display); font-weight: 800; font-size: clamp(36px,4.6vw,88px); line-height: 1; text-wrap: balance; }
+.ask { font-size: clamp(15px,1.2vw,22px); color: var(--body-dark); }
+.cols { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(12px,1.4vw,24px); }
+.pn { display: flex; flex-direction: column; gap: 10px; text-align: left; border: 2px dashed rgba(19,35,63,.28); border-radius: 16px; padding: clamp(14px,1.5vw,26px); background: transparent; min-height: clamp(130px,26vh,300px); }
+.pn .k { font-size: clamp(12px,.95vw,17px); font-weight: 700; letter-spacing: .16em; color: var(--gold-ink); }
+.pn .hide { font-size: clamp(16px,1.3vw,24px); color: #8A93A1; }
+.pn .a { display: none; font-size: clamp(17px,1.55vw,30px); line-height: 1.42; color: var(--body-dark); }
+.pn.show { border: 2px solid var(--gold); border-left-width: 8px; background: #FFFDF8; cursor: default; animation: pop 220ms ease-out; }
+.pn.show .hide { display: none; }
+.pn.show .a { display: block; }
+.badge { display: inline-block; align-self: flex-start; font-size: clamp(14px,1.2vw,22px); font-weight: 700; letter-spacing: .06em; color: #fff; padding: 6px 14px; border-radius: 999px; margin-bottom: 8px; }
+.badge.done { background: var(--ok); } .badge.build { background: var(--build); } .badge.prep { background: var(--prep); } .badge.plan { background: var(--plan); }
+.src { font-size: clamp(12px,.9vw,16px); color: #5B6575; }
+.actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.btn { border-radius: 999px; padding: clamp(10px,1.1vw,18px) clamp(18px,2vw,34px); font-size: clamp(16px,1.3vw,24px); font-weight: 700; border: 3px solid var(--ink); background: transparent; color: var(--ink); }
+.btn.primary { background: var(--gold); border-color: var(--gold); }
+.btn.primary:hover { background: #E5B84C; }
+.hint { font-size: clamp(12px,.9vw,16px); color: #5B6575; }
+@media (max-width: 900px) { .board { grid-template-columns: repeat(3,minmax(0,1fr)); } .cols { grid-template-columns: 1fr; } .pn { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .card, .pn.show { animation: none; } .tile { transition: none; } .tile:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">TRAINING SALE · KHU NAM · 16/11/2026</p>
+      <h1>Nam Sài Gòn – 15 tuyến hạ tầng định giá</h1>
+      <p class="how">Chọn 1 ô, nói đúng tuyến – đúng tiến độ – đúng tác động. Mỗi ô có 45 giây trước khi xem đáp án.</p>
+    </div>
+    <div class="tools">
+      <p class="count">Đã mở <b id="opened">0</b>/15</p>
+      <button class="reset" id="reset" type="button">Chơi lại</button>
+    </div>
+  </header>
+  <main class="board" id="board" aria-label="Bảng 15 ô hạ tầng"></main>
+  <footer>Số liệu báo chí đến 16/11/2026 (CafeF, Tuổi Trẻ, VnEconomy, SGGP, PLO, CafeLand…). Tiến độ có thể thay đổi: kiểm tra lại trước khi báo khách.</footer>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="qtopic">
+  <div class="card" id="card">
+    <div class="qhead">
+      <div class="chip"><span class="n" id="qnum">1</span><p class="t" id="qtype">CẦU</p></div>
+      <div class="timer" aria-live="off"><p class="s" id="tsec">45</p><div class="bar"><i id="tbar"></i></div></div>
+    </div>
+    <h2 class="topic" id="qtopic"></h2>
+    <p class="ask">Sale trả lời 3 ý: tuyến đi đâu, đang ở giai đoạn nào, tác động gì cho khu Nam.</p>
+    <div class="cols">
+      <div class="pn" id="pn0"><p class="k">1 · VỊ TRÍ / HƯỚNG TUYẾN</p><p class="hide">Đáp án ẩn</p><div class="a" id="a0"></div></div>
+      <div class="pn" id="pn1"><p class="k">2 · TIẾN ĐỘ HIỆN TẠI</p><p class="hide">Đáp án ẩn</p><div class="a" id="a1"></div></div>
+      <div class="pn" id="pn2"><p class="k">3 · Ý NGHĨA TÁC ĐỘNG</p><p class="hide">Đáp án ẩn</p><div class="a" id="a2"></div></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="reveal" type="button">Xem đáp án tiếp</button>
+      <button class="btn" id="close" type="button">Về bảng</button>
+    </div>
+    <p class="hint">Phím tắt: Space xem ý tiếp theo · Esc về bảng. Số liệu theo báo chí, có thể thay đổi.</p>
+  </div>
+</div>
+
+<script>
+// Thứ tự ô 1–15 đã xáo ngẫu nhiên và được Sếp duyệt 15/11/2026.
+const S = { done: 'ĐÃ KHAI THÁC', build: 'ĐANG THI CÔNG', prep: 'CHUẨN BỊ KHỞI CÔNG', plan: 'ĐỀ XUẤT' };
+const T = {
+  1: { type: 'CẦU', name: 'Cầu Thủ Thiêm 4',
+    pos: 'Từ nút giao Tân Thuận 2 (Nguyễn Văn Linh) sang Nguyễn Cơ Thạch (An Khánh, Thủ Thiêm); dài ~2,1 km, cầu ~1,6 km.',
+    k: 'prep', label: 'CHUẨN BỊ KHỞI CÔNG', prog: 'Vốn ~5.063 tỷ; khảo sát giải phóng mặt bằng 8/2026; dự kiến khởi công Q4/2026, xong Q4/2028.',
+    imp: 'Nối thẳng Nam Sài Gòn – Thủ Thiêm, giảm tải cầu Phú Mỹ và Tân Thuận.' },
+  2: { type: 'CẦU', name: 'Cầu Bình Tiên',
+    pos: 'Dài 3,66 km (cầu cạn ~3,1 km); từ Phạm Văn Chí (P. Bình Tiên) vượt Võ Văn Kiệt, kênh Tàu Hủ, kênh Đôi → Nguyễn Văn Linh (xã Bình Hưng).',
+    k: 'build', label: 'ĐANG THI CÔNG', prog: 'Khởi công 7/2026, dự kiến hoàn thành 2028; vốn ~6.285 tỷ.',
+    imp: 'Nối Q6–Q8 với Nam Sài Gòn; hưởng lợi trực tiếp khu Bình Hưng.' },
+  3: { type: 'ĐƯỜNG', name: 'Đường trên cao Nguyễn Văn Linh',
+    pos: '~17,8 km, 6 làn trên dải phân cách, 7 nút giao khác mức; từ cầu Thủ Thiêm 4 đến QL1.',
+    k: 'plan', label: 'ĐỀ XUẤT / NGHIÊN CỨU', prog: 'Hình thức PPP, liên danh Đèo Cả – Trí Tín đang khảo sát (5/2026); đề xuất giai đoạn 2026–2029.',
+    imp: 'Giải tỏa trục huyết mạch Nam Sài Gòn, rút ngắn đi Thủ Thiêm / Long An.' },
+  4: { type: 'ĐƯỜNG', name: 'Đường trên cao Nguyễn Hữu Thọ',
+    pos: '8,6 km, từ Nguyễn Văn Linh đến cao tốc Bến Lức – Long Thành; phần trên cao ~7,2 km, 4 làn; tổng vốn ~9.894 tỷ.',
+    k: 'plan', label: 'ĐỀ XUẤT (ĐÃ CÓ CHỦ TRƯƠNG)', prog: 'HĐND thông qua chủ trương đầu tư 2/2026; chưa thấy khởi công.',
+    imp: 'Nối Q7 – Nhà Bè thẳng ra cao tốc, tăng giá trị trục Nguyễn Hữu Thọ.' },
+  5: { type: 'METRO', name: 'Metro số 7',
+    pos: 'Tân Kiên – Nguyễn Văn Linh – Thủ Thiêm – Thảo Điền – Thanh Đà – Khu CN cao – Vinhomes Grand Park – Long Bình; 51,2 km, 36 ga.',
+    k: 'plan', label: 'QUY HOẠCH', prog: 'Chưa có chủ trương đầu tư xây dựng; MAUR là chủ đầu tư.',
+    imp: 'Kết nối Nam – Đông Sài Gòn bằng đường sắt đô thị; lợi thế dài hạn.' },
+  6: { type: 'CẦU', name: 'Cầu vượt biển Cần Giờ – Vũng Tàu',
+    pos: '~14 km (cầu biển ~8 km + hầm chìm ~3,85 km), 6 làn; từ Biển Đông 2 (Cần Giờ) → Sao Mai – Bến Đình (Vũng Tàu).',
+    k: 'build', label: 'ĐÃ KHỞI CÔNG 1/7/2026', prog: 'Vingroup, PPP-BT, ~93.160 tỷ; dự kiến khoảng 3 năm sau bàn giao mặt bằng (~2029).',
+    imp: 'TP.HCM – Vũng Tàu còn khoảng 10 phút qua cầu; mở trục biển Nam Sài Gòn.' },
+  7: { type: 'CẦU', name: 'Cầu Nguyễn Khoái',
+    pos: 'Từ đường D1 (Him Lam) qua kênh Tẻ, rạch Bến Nghé → Võ Văn Kiệt; nối Q7 – Q4 – Q1; ~4 km, cầu ~2,5 km.',
+    k: 'build', label: 'ĐÃ KHỞI CÔNG 19/12/2025', prog: 'Giải phóng mặt bằng >53%. Vốn ~3.724 tỷ; hoàn thành cuối 2027 – 2028 (các báo nêu khác nhau).',
+    imp: 'Rút ngắn Q7 – trung tâm Q1, giảm tải cầu Tân Thuận và Nguyễn Văn Cừ.' },
+  8: { type: 'CẦU', name: 'Cầu Phú Mỹ 2',
+    pos: 'Nguyễn Hữu Thọ → Hoàng Quốc Việt / Đào Trí → vượt sông Nhà Bè – Đồng Nai → Đại Phước (Đồng Nai), hướng sân bay Long Thành; 16,7 km, cầu ~6,3 km, 8 làn.',
+    k: 'build', label: 'ĐÃ ĐỘNG THỔ 15/1/2026', prog: 'Masterise, PPP-BT, ~21.500–23.000 tỷ (các báo ghi khác nhau); dự kiến hoàn thành khoảng 2029.',
+    imp: 'Nam Sài Gòn – sân bay Long Thành và Đồng Nai.' },
+  9: { type: 'CẦU', name: 'Cầu Tân Thuận 1 (xây mới) và Tân Thuận 2 (nâng cấp)',
+    pos: 'Hai cầu cùng bắc qua kênh Tẻ, nối Q4 – Q7. Tân Thuận 1 cũ (1905, ~241 m) sẽ được thay bằng cầu mới; Tân Thuận 2 đang khai thác, được nâng cấp.',
+    k: 'plan', label: 'ĐỀ XUẤT', prog: 'Cầu Tân Thuận 1 mới 6 làn xe nằm trong dự án Nguyễn Tất Thành (vốn chung ~2.950 tỷ); Tân Thuận 2 mở rộng lên 8 làn xe.',
+    imp: 'Giảm tắc nghẽn cửa ngõ Q7 – Q4.' },
+  10: { type: 'METRO', name: 'Metro số 4',
+    pos: '~43 km, Đông Thạnh (ga Cầu Sáng) → Tân Sơn Nhất → Bến Thành → Khánh Hội → Nguyễn Hữu Thọ → Hiệp Phước (đoạn cuối ~9,3 km dọc Nguyễn Văn Tạo).',
+    k: 'plan', label: 'NGHIÊN CỨU KHẢ THI', prog: 'Khoan địa chất 8/2026; chưa có ngày khởi công.',
+    imp: 'Trục metro xuyên Nam Sài Gòn từ trung tâm tới Nhà Bè; kỳ vọng dài hạn.' },
+  11: { type: 'ĐƯỜNG', name: 'Đường Nguyễn Tất Thành',
+    pos: '2,5 km, từ cầu Khánh Hội đến cầu Tân Thuận; mở rộng 4 → 6–8 làn; có hầm chui Hoàng Diệu và cầu Tân Thuận 1 mới.',
+    k: 'plan', label: 'ĐỀ XUẤT (10/2025)', prog: 'Vốn ~2.950 tỷ.',
+    imp: 'Thông cửa ngõ Q4 – Q7, tuyến ra vào trung tâm.' },
+  12: { type: 'CẦU', name: 'Cầu Cần Giờ',
+    pos: 'Xã Nhà Bè ↔ xã Bình Khánh qua sông Soài Rạp; tổng ~6,3 km (một số báo ghi 7,3 km), cầu chính gần 3 km, 6 làn; thay phà Bình Khánh.',
+    k: 'build', label: 'ĐÃ ĐỘNG THỔ 15/1/2026', prog: 'Masterise, PPP-BT, ~13.200 tỷ; giai đoạn 2026–2029.',
+    imp: 'Bỏ phà, nối Nhà Bè – Cần Giờ, mở quỹ đất phía Nam.' },
+  13: { type: 'CAO TỐC', name: 'Cao tốc Bến Lức – Long Thành',
+    pos: '~58 km, từ giao cao tốc TP.HCM – Trung Lương (Bến Lức, Long An) đến QL51 (Đồng Nai); qua cầu Bình Khánh, Phước Khánh.',
+    k: 'done', label: 'ĐÃ KHAI THÁC TOÀN TUYẾN', prog: 'Khai thác toàn tuyến từ 1/10/2026. Đoạn từ QL51 đến cao tốc Biên Hòa – Vũng Tàu chưa có.',
+    imp: 'Nối miền Tây – Đông Nam Bộ – sân bay Long Thành (khai thác thương mại 1/12/2026); Nam Sài Gòn là điểm trung chuyển.' },
+  14: { type: 'METRO', name: 'Metro Bến Thành – Cần Giờ',
+    pos: '~53,8 km, từ Công viên 23/9 (Bến Thành) qua Q7, Nhà Bè, vượt sông Soài Rạp đến xã Cần Giờ; nối metro số 1.',
+    k: 'build', label: 'ĐÃ ĐỘNG THỔ 19/12/2025', prog: 'VinSpeed, >102.430 tỷ chưa kể GPMB; khoan địa chất 5/2026; hoàn thành khoảng 2028 theo một nguồn.',
+    imp: 'Trục metro xuyên Nam Sài Gòn, kết nối trực tiếp Q7 – Nhà Bè.' },
+  15: { type: 'ĐƯỜNG', name: 'Song hành phía Tây Lê Văn Lương (Nhà Bè)',
+    pos: 'Từ cầu Rạch Đỉa đến đường Vĩnh Phước – Cây Khô, ~1,48 km, lộ giới 30 m (danh mục mời gọi đầu tư ghi ~3 km).',
+    k: 'plan', label: 'ĐỀ XUẤT', prog: 'Vốn ~2.650 tỷ (GPMB ~2.000 tỷ); nằm trong 6 dự án xã Nhà Bè đề xuất (4/2026).',
+    imp: 'Mở thêm trục song song, giảm tải Lê Văn Lương, mở quỹ đất Nhà Bè.' }
+};
+const IDS = Object.keys(T).map(Number);
+const SECONDS = 45;
+const KEY = 'minigame-ha-tang-15';
+
+let state = { opened: [], current: null, shown: 0 };
+const $ = id => document.getElementById(id);
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } },
+  save() { try { localStorage.setItem(KEY, JSON.stringify({ opened: state.opened })); } catch (e) {} }
+};
+
+function buildBoard() {
+  const board = $('board');
+  board.innerHTML = '';
+  IDS.forEach(id => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tile'; b.id = 'tile-' + id;
+    b.setAttribute('aria-label', 'Ô số ' + id);
+    b.innerHTML = `<span class="num">${id}</span><span class="name">${T[id].name}</span>`;
+    b.addEventListener('click', () => openQ(id));
+    board.appendChild(b);
+  });
+}
+
+function paint() {
+  IDS.forEach(id => {
+    const el = $('tile-' + id);
+    const on = state.opened.includes(id);
+    el.classList.toggle('done', on);
+    el.setAttribute('aria-label', on ? `Ô số ${id}, ${T[id].name}, đã mở` : 'Ô số ' + id);
+  });
+  $('opened').textContent = state.opened.length;
+}
+
+let t0 = 0, raf = 0;
+function tick() {
+  const left = Math.max(0, SECONDS - (performance.now() - t0) / 1000);
+  $('tsec').textContent = Math.ceil(left);
+  $('tsec').classList.toggle('out', left <= 0);
+  $('tbar').style.transform = `scaleX(${left / SECONDS})`;
+  if (left > 0 && state.current) raf = requestAnimationFrame(tick);
+  else if (left <= 0) $('tsec').textContent = 'Hết giờ';
+}
+
+function showPanels() {
+  for (let i = 0; i < 3; i++) $('pn' + i).classList.toggle('show', i < state.shown);
+  const all = state.shown >= 3;
+  $('reveal').textContent = all ? 'Ẩn đáp án' : (state.shown === 0 ? 'Xem đáp án' : 'Xem ý tiếp theo');
+}
+
+function openQ(id, shown) {
+  const it = T[id];
+  state.current = id; state.shown = shown || 0;
+  $('qnum').textContent = id;
+  $('qtype').textContent = it.type;
+  $('qtopic').textContent = it.name;
+  $('a0').textContent = it.pos;
+  $('a1').innerHTML = `<span class="badge ${it.k}">${it.label}</span><br>`;
+  $('a1').appendChild(document.createTextNode(it.prog));
+  $('a2').textContent = it.imp;
+  $('overlay').classList.add('open');
+  if (!state.opened.includes(id)) { state.opened.push(id); store.save(); }
+  paint(); showPanels();
+  cancelAnimationFrame(raf); t0 = performance.now(); tick();
+  $('reveal').focus();
+}
+
+function next() { state.shown = state.shown >= 3 ? 0 : state.shown + 1; showPanels(); }
+
+function closeQ() {
+  const id = state.current;
+  state.current = null; state.shown = 0;
+  cancelAnimationFrame(raf);
+  $('overlay').classList.remove('open');
+  if (id) $('tile-' + id).focus();
+}
+
+let armTimer = 0;
+$('reset').addEventListener('click', () => {
+  const btn = $('reset');
+  if (!btn.classList.contains('armed')) {
+    btn.classList.add('armed'); btn.textContent = 'Bấm lần nữa để xoá';
+    clearTimeout(armTimer);
+    armTimer = setTimeout(() => { btn.classList.remove('armed'); btn.textContent = 'Chơi lại'; }, 3000);
+    return;
+  }
+  clearTimeout(armTimer);
+  btn.classList.remove('armed'); btn.textContent = 'Chơi lại';
+  state.opened = []; store.save(); paint();
+});
+$('reveal').addEventListener('click', next);
+$('close').addEventListener('click', closeQ);
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeQ(); });
+document.addEventListener('keydown', e => {
+  if (!state.current) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeQ(); }
+  else if (e.key === ' ' && document.activeElement !== $('close')) { e.preventDefault(); next(); }
+});
+
+function start(saved) {
+  const s = (saved && saved.opened) ? saved : (store.load() || {});
+  state.opened = Array.isArray(s.opened) ? s.opened.filter(id => T[id]) : [];
+  buildBoard(); paint();
+  if (saved && saved.current && T[saved.current]) openQ(saved.current, saved.shown || 0);
+}
+window.claude?.hot?.snapshot?.(() => ({ opened: state.opened, current: state.current, shown: state.shown }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
